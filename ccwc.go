@@ -1,33 +1,61 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
 
 func main() {
 	byteCount := flag.Bool("c", false, "Display the byte count of a .txt file.")
+	lineCount := flag.Bool("l", false, "Display the line count of a .txt file.")
 	args := os.Args
+
 	if len(args) <= 2 {
 		info()
-		os.Exit(0)
+		os.Exit(1)
 	} else {
 		flag.Parse()
-		file, err := os.ReadFile(args[2])
+		file, err := os.Open(args[2])
 		if err != nil {
 			log.Fatal("error reading file")
+			os.Exit(1)
 		}
-		if *byteCount {
-			counter := 0
-			counter += len(string(file))
-			fmt.Printf("%v %v\n", counter, args[2])
+		defer file.Close()
 
-		} else {
-			fmt.Printf("%v\n", args[2])
+		if *byteCount {
+			fmt.Printf("%v %v\n", byteCounter(file), args[2])
+		}
+		if *lineCount {
+			fmt.Printf("%v %v\n", lineCounter(file), args[2])
 		}
 	}
+}
+
+func byteCounter(file *os.File) int {
+	data, err := io.ReadAll(file)
+
+	if err != nil {
+		panic(err)
+	}
+	return len(data)
+}
+
+func lineCounter(file *os.File) int {
+	scanner := bufio.NewScanner(file)
+	lineCount := 0
+
+	for scanner.Scan() {
+		lineCount++
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+	return lineCount
 }
 
 func info() {
