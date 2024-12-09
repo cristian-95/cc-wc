@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 )
 
@@ -15,32 +14,28 @@ func main() {
 	wordCount := flag.Bool("w", false, "Display the word count of a .txt file.")
 	charCount := flag.Bool("m", false, "Display the char count of a .txt file.")
 	args := os.Args
+	var file *os.File
 
-	if len(args) <= 2 {
-		info()
-		os.Exit(1)
-	} else {
-		flag.Parse()
-		file, err := os.Open(args[2])
-		if err != nil {
-			log.Fatal("error reading file")
-			os.Exit(1)
-		}
-		defer file.Close()
-
-		if *byteCount {
-			fmt.Printf("%v %v\n", byteCounter(file), args[2])
-		}
-		if *lineCount {
-			fmt.Printf("%v %v\n", lineCounter(file), args[2])
-		}
-		if *wordCount {
-			fmt.Printf("%v %v\n", wordCounter(file), args[2])
-		}
-		if *charCount {
-			fmt.Printf("%v %v\n", charCounter(file), args[2])
-		}
+	file, err := os.Open(args[len(args)-1])
+	if err != nil {
+		panic(err)
 	}
+	defer file.Close()
+	flag.Parse()
+
+	switch {
+	case *byteCount:
+		fmt.Printf("%v %v\n", byteCounter(file), file.Name())
+	case *lineCount:
+		fmt.Printf("%v %v\n", lineCounter(file), file.Name())
+	case *wordCount:
+		fmt.Printf("%v %v\n", wordCounter(file), file.Name())
+	case *charCount:
+		fmt.Printf("%v %v\n", charCounter(file), file.Name())
+	default:
+		fmt.Printf("%v %v %v %v\n", lineCounter(file), wordCounter(file), byteCounter(file), file.Name())
+	}
+
 }
 
 func byteCounter(file *os.File) int {
@@ -64,6 +59,8 @@ func wordCounter(file *os.File) int {
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+
+	file.Seek(0, io.SeekStart)
 	return wordCount
 }
 
@@ -79,6 +76,8 @@ func charCounter(file *os.File) int {
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+
+	file.Seek(0, io.SeekStart)
 	return wordCount
 }
 
@@ -93,9 +92,7 @@ func lineCounter(file *os.File) int {
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
-	return lineCount
-}
 
-func info() {
-	fmt.Println("Usage:\n$ go build ccwc.go\n$ ./ccwc [-flags] [your-file].txt")
+	file.Seek(0, io.SeekStart)
+	return lineCount
 }
