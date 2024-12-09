@@ -12,6 +12,7 @@ import (
 func main() {
 	byteCount := flag.Bool("c", false, "Display the byte count of a .txt file.")
 	lineCount := flag.Bool("l", false, "Display the line count of a .txt file.")
+	wordCount := flag.Bool("w", false, "Display the word count of a .txt file.")
 	args := os.Args
 
 	if len(args) <= 2 {
@@ -32,6 +33,9 @@ func main() {
 		if *lineCount {
 			fmt.Printf("%v %v\n", lineCounter(file), args[2])
 		}
+		if *wordCount {
+			fmt.Printf("%v %v\n", wordCounter(file), args[2])
+		}
 	}
 }
 
@@ -42,6 +46,21 @@ func byteCounter(file *os.File) int {
 		panic(err)
 	}
 	return len(data)
+}
+
+func wordCounter(file *os.File) int {
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	wordCount := 0
+
+	for scanner.Scan() {
+		wordCount++
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+	return wordCount
 }
 
 func lineCounter(file *os.File) int {
