@@ -13,36 +13,39 @@ func main() {
 	lineCount := flag.Bool("l", false, "Display the line count of a .txt file.")
 	wordCount := flag.Bool("w", false, "Display the word count of a .txt file.")
 	charCount := flag.Bool("m", false, "Display the char count of a .txt file.")
-	args := os.Args
-	var file *os.File
 
-	file, err := os.Open(args[len(args)-1])
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
 	flag.Parse()
 
+	var file *os.File
+	file, err := os.Open(flag.Arg(0))
+	if err != nil {
+		handleError(err)
+	}
+	defer file.Close()
+
+	processFile(file, *byteCount, *lineCount, *wordCount, *charCount)
+}
+
+func processFile(file *os.File, byteCount, lineCount, wordCount, charCount bool) {
 	switch {
-	case *byteCount:
+	case byteCount:
 		fmt.Printf("%v %v\n", byteCounter(file), file.Name())
-	case *lineCount:
+	case lineCount:
 		fmt.Printf("%v %v\n", lineCounter(file), file.Name())
-	case *wordCount:
+	case wordCount:
 		fmt.Printf("%v %v\n", wordCounter(file), file.Name())
-	case *charCount:
+	case charCount:
 		fmt.Printf("%v %v\n", charCounter(file), file.Name())
 	default:
 		fmt.Printf("%v %v %v %v\n", lineCounter(file), wordCounter(file), byteCounter(file), file.Name())
 	}
-
 }
 
 func byteCounter(file *os.File) int {
 	data, err := io.ReadAll(file)
 
 	if err != nil {
-		panic(err)
+		handleError(err)
 	}
 	return len(data)
 }
@@ -57,7 +60,7 @@ func wordCounter(file *os.File) int {
 	}
 
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		handleError(err)
 	}
 
 	file.Seek(0, io.SeekStart)
@@ -74,7 +77,7 @@ func charCounter(file *os.File) int {
 	}
 
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		handleError(err)
 	}
 
 	file.Seek(0, io.SeekStart)
@@ -90,9 +93,14 @@ func lineCounter(file *os.File) int {
 	}
 
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		handleError(err)
 	}
 
 	file.Seek(0, io.SeekStart)
 	return lineCount
+}
+
+func handleError(err error) {
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	os.Exit(1)
 }
