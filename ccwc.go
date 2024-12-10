@@ -13,31 +13,39 @@ func main() {
 	lineCount := flag.Bool("l", false, "Display the line count of a .txt file.")
 	wordCount := flag.Bool("w", false, "Display the word count of a .txt file.")
 	charCount := flag.Bool("m", false, "Display the char count of a .txt file.")
-
 	flag.Parse()
 
 	var file *os.File
-	file, err := os.Open(flag.Arg(0))
-	if err != nil {
-		handleError(err)
+	var err error
+	name := ""
+
+	if len(flag.Args()) > 0 {
+		file, err = os.Open(flag.Arg(0))
+		if err != nil {
+			handleError(err)
+		}
+		name = file.Name()
+	} else {
+		file = os.Stdin
 	}
+
 	defer file.Close()
 
-	processFile(file, *byteCount, *lineCount, *wordCount, *charCount)
+	processFile(file, name, *byteCount, *lineCount, *wordCount, *charCount)
 }
 
-func processFile(file *os.File, byteCount, lineCount, wordCount, charCount bool) {
+func processFile(file *os.File, fileName string, byteCount, lineCount, wordCount, charCount bool) {
 	switch {
 	case byteCount:
-		fmt.Printf("%v %v\n", byteCounter(file), file.Name())
+		fmt.Printf("%v %v\n", byteCounter(file), fileName)
 	case lineCount:
-		fmt.Printf("%v %v\n", lineCounter(file), file.Name())
+		fmt.Printf("%v %v\n", lineCounter(file), fileName)
 	case wordCount:
-		fmt.Printf("%v %v\n", wordCounter(file), file.Name())
+		fmt.Printf("%v %v\n", wordCounter(file), fileName)
 	case charCount:
-		fmt.Printf("%v %v\n", charCounter(file), file.Name())
+		fmt.Printf("%v %v\n", charCounter(file), fileName)
 	default:
-		fmt.Printf("%v %v %v %v\n", lineCounter(file), wordCounter(file), byteCounter(file), file.Name())
+		fmt.Printf("%v %v %v %v\n", lineCounter(file), wordCounter(file), byteCounter(file), fileName)
 	}
 }
 
